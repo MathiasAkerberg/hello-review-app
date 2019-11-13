@@ -1,8 +1,0 @@
-namePrefix: hello-app-
-
-commonLabels:
-  app: hello-app
-
-resources:
-- deployment.yaml
-- service.yaml
