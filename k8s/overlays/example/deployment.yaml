@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: container
+        image: srcrdev.azurecr.io/hello-app:#{VersionNumber}
+        imagePullPolicy: Always
+      imagePullSecrets:
+      - name: srcrdev-registry-secret
