@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: helloreviewapp 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: helloreviewapp 
+    spec:
+      containers:
+        - name: helloreviewapp 
+          image: octolab.azurecr.io/helloreviewapp
+          ports:
+          - containerPort: 80
