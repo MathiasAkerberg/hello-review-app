@@ -22,7 +22,7 @@ variables:
   vmImageName: 'ubuntu-latest'
   
   # Name of the new namespace being created to deploy the PR changes.
-  k8sNamespaceForPR: '$(system.pullRequest.sourceBranch)'
+  k8sNamespaceForDevBranch: '$(Build.SourceBranchName)'
 
 stages:
 - stage: Build
@@ -52,7 +52,7 @@ stages:
 
   jobs:
   - deployment: Deploy
-    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: Deploy
     pool:
       vmImage: $(vmImageName)
@@ -82,11 +82,11 @@ stages:
 
   - deployment: DeployPullRequest
     displayName: Deploy Pull request
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
     pool:
       vmImage: $(vmImageName)
       
-    environment: 'MathiasAkerberghelloreviewapp.$(k8sNamespaceForPR)'
+    environment: 'MathiasAkerberghelloreviewapp.$(k8sNamespaceForDevBranch)'
     strategy:
       runOnce:
         deploy:
@@ -98,21 +98,21 @@ stages:
             inputs:
               command: apply
               useConfigurationFile: true
-              inline: '{ "kind": "Namespace", "apiVersion": "v1", "metadata": { "name": "$(k8sNamespaceForPR)" }}'
+              inline: '{ "kind": "Namespace", "apiVersion": "v1", "metadata": { "name": "$(k8sNamespaceForDevBranch)" }}'
 
           - task: KubernetesManifest@0
             displayName: Create imagePullSecret
             inputs:
               action: createSecret
               secretName: $(imagePullSecret)
-              namespace: $(k8sNamespaceForPR)
+              namespace: $(k8sNamespaceForDevBranch)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
           
           - task: KubernetesManifest@0
             displayName: Deploy to the new namespace in the Kubernetes cluster
             inputs:
               action: deploy
-              namespace: $(k8sNamespaceForPR)
+              namespace: $(k8sNamespaceForDevBranch)
               manifests: |
                 $(Pipeline.Workspace)/manifests/deployment.yml
                 $(Pipeline.Workspace)/manifests/service.yml
@@ -127,7 +127,7 @@ stages:
             continueOnError: true
             inputs:
               command: get
-              namespace: $(k8sNamespaceForPR)
+              namespace: $(k8sNamespaceForDevBranch)
               arguments: svc
               outputFormat: jsonpath='http://{.items[0].status.loadBalancer.ingress[0].ip}:{.items[0].spec.ports[0].port}'
               
