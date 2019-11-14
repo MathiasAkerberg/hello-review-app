@@ -77,8 +77,8 @@ stages:
               containers: |
                 $(containerRegistry)/$(imageRepository):$(tag)
 
-  - deployment: DeployPullRequest
-    displayName: Deploy Pull request
+  - deployment: DeployReviewApp
+    displayName: Deploy Review App
     condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
     pool:
       vmImage: $(vmImageName)
